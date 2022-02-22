@@ -6,6 +6,14 @@ pub mod state;
 
 use state::UserProfile;
 
+enum UserAction {
+    VIEW,
+    LIKE,
+    SHARE,
+    COMMENT,
+    DOWNLOAD,
+}
+
 #[program]
 pub mod capture_actions {
     use super::*;
