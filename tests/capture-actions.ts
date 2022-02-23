@@ -10,7 +10,8 @@ describe('capture-actions', () => {
 
   const program = anchor.workspace.CaptureActions as Program<CaptureActions>;
 
-  let _userProfile;
+  let _userProfile: anchor.web3.Keypair;
+  let _post: anchor.web3.Keypair;
 
   it("User's profile is created!", async () => {
     const userProfile = anchor.web3.Keypair.generate()
@@ -32,19 +33,40 @@ describe('capture-actions', () => {
     _userProfile = userProfile;
   });
 
-  it("Content is uploaded!", async () => {
+  it("A post is written!", async () => {
     const userProfile = _userProfile;
-
-    const tx = await program.rpc.uploadContent({
+    const post = anchor.web3.Keypair.generate()
+    const tx = await program.rpc.writePost({
       accounts: {
         userProfile: userProfile.publicKey,
-        authority: provider.wallet.publicKey
-      }
+        authority: provider.wallet.publicKey,
+        post: post.publicKey,
+        systemProgram: anchor.web3.SystemProgram.programId,
+      },
+      signers: [post]
     })
     console.log("Your transaction signature", tx);
 
-    const profile = await program.account.userProfile.fetch(userProfile.publicKey);
+    const postAccount = await program.account.post.fetch(post.publicKey);
 
-    assert.ok(profile.score.eq(new anchor.BN(1)));
+    assert.ok(postAccount.creator.equals(userProfile.publicKey));
+
+    _post = post
+
   });
+
+  // it("Score is updated!", async () => {
+  //   const userProfile = _userProfile;
+  //   const post = _post;
+
+  //   const tx = await program.rpc.doPost(new anchor.BN(1), {
+  //     accounts: {
+  //       userProfile: userProfile.publicKey,
+  //       authority: provider.wallet.publicKey,
+  //       post: post.publicKey,
+  //       postWriter: provider.wallet.publicKey
+  //     }
+  //   })
+  //   console.log("Your transaction signature", tx);
+  // });
 });
