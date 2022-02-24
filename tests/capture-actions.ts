@@ -72,18 +72,18 @@ describe('capture-actions', () => {
     _post = post
   });
 
-  // it("Score is updated!", async () => {
-  //   const userProfile = _userProfile;
-  //   const post = _post;
+  it("Score is updated!", async () => {
+    const userProfile = _userProfile;
+    const post = _post;
 
-  //   const tx = await program.rpc.doPost(new anchor.BN(1), {
-  //     accounts: {
-  //       userProfile: userProfile.publicKey,
-  //       authority: provider.wallet.publicKey,
-  //       post: post.publicKey,
-  //       postWriter: provider.wallet.publicKey
-  //     }
-  //   })
-  //   console.log("Your transaction signature", tx);
-  // });
+    const tx = await program.rpc.doPost(0, {
+      accounts: {
+        userProfile: userProfile.publicKey,
+        authority: provider.wallet.publicKey,
+        post: post.publicKey,
+        postCreator: provider.wallet.publicKey
+      }
+    })
+    console.log("Your transaction signature", tx);
+  });
 });
