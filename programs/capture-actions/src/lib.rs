@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::program_option::COption;
+use anchor_lang::solana_program::{self, program_option::COption};
 use anchor_spl::token::{self, Mint, MintTo, SetAuthority, TokenAccount};
 use spl_token::instruction::AuthorityType;
 
@@ -53,6 +53,9 @@ pub mod capture_actions {
         let token = &mut ctx.accounts.token;
         post.token = *token.to_account_info().key;
 
+        // demo
+        user_profile.sac += 10;
+
         // Mint NFT and delete mint authority
         token::mint_to(ctx.accounts.mint_to(), 1)?;
         token::set_authority(
@@ -79,6 +82,27 @@ pub mod capture_actions {
             return Err(ProgramError::InvalidAccountData)
         }
         post_creator.sac += action as u64;
+        Ok(())
+    }
+
+    pub fn transfer_sol(ctx: Context<TransferSol>) -> ProgramResult {
+        let user_profile = &mut ctx.accounts.user_profile;
+        let system_program = &ctx.accounts.system_program;
+        if user_profile.sac > 0 {
+            let ix = solana_program::system_instruction::transfer(
+                &ctx.accounts.authority.to_account_info().key(),
+                &user_profile.to_account_info().key(),
+                user_profile.sac,
+            );
+            solana_program::program::invoke(
+                &ix,
+                &[
+                    ctx.accounts.authority.to_account_info(),
+                    ctx.accounts.user_profile.to_account_info(),
+                    system_program.to_account_info(),
+                ],
+            )?;
+        }
         Ok(())
     }
 }
@@ -139,4 +163,13 @@ pub struct DoPost<'info> {
     pub post: Account<'info, Post>,
     #[account(mut)]
     pub post_creator: Account<'info, UserProfile>,
+}
+
+#[derive(Accounts)]
+pub struct TransferSol<'info> {
+    #[account(mut, has_one = authority)]
+    pub user_profile: Account<'info, UserProfile>,
+    #[account(mut)]
+    pub authority: Signer<'info>,
+    pub system_program: Program<'info, System>,
 }

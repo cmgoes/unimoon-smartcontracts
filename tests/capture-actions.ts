@@ -54,8 +54,11 @@ describe('capture-actions', () => {
     })
     console.log("Your transaction signature", tx);
 
+    const profileAccount = await program.account.userProfile.fetch(userProfile.publicKey);
     const postAccount = await program.account.post.fetch(post.publicKey);
     const tokenAccount = await getTokenAccount(provider, token);
+
+    assert.ok(profileAccount.sac.eq(new anchor.BN(10)));
 
     assert.ok(postAccount.views.eq(new anchor.BN(0)));
     assert.ok(postAccount.likes.eq(new anchor.BN(0)));
@@ -72,18 +75,31 @@ describe('capture-actions', () => {
     _post = post
   });
 
-  it("Score is updated!", async () => {
+  it("Is transferred!", async () => {
     const userProfile = _userProfile;
-    const post = _post;
 
-    const tx = await program.rpc.doPost(0, {
+    const tx = await program.rpc.transferSol({
       accounts: {
         userProfile: userProfile.publicKey,
         authority: provider.wallet.publicKey,
-        post: post.publicKey,
-        postCreator: provider.wallet.publicKey
+        systemProgram: anchor.web3.SystemProgram.programId,
       }
     })
     console.log("Your transaction signature", tx);
   });
+
+  // it("Score is updated!", async () => {
+  //   const userProfile = _userProfile;
+  //   const post = _post;
+
+  //   const tx = await program.rpc.doPost(new anchor.BN(0), {
+  //     accounts: {
+  //       userProfile: userProfile.publicKey,
+  //       authority: provider.wallet.publicKey,
+  //       post: post.publicKey,
+  //       postCreator: provider.wallet.publicKey
+  //     }
+  //   })
+  //   console.log("Your transaction signature", tx);
+  // });
 });
