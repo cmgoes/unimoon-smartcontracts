@@ -3,7 +3,7 @@ use anchor_lang::prelude::*;
 #[account]
 pub struct UserProfile {
     pub authority: Pubkey,
-    pub score: u64,
+    pub sac: u64,
 }
 
 #[account]
@@ -14,6 +14,6 @@ pub struct Post {
     pub total_comments: u64,
     pub downloads: u64,
     pub creator: Pubkey,
-    pub score: u64,
+    pub sac: u64,
     pub token: Pubkey,
 }

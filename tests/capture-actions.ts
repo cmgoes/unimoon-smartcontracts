@@ -28,7 +28,7 @@ describe('capture-actions', () => {
 
     const profile = await program.account.userProfile.fetch(userProfile.publicKey);
 
-    assert.ok(profile.score.eq(new anchor.BN(0)));
+    assert.ok(profile.sac.eq(new anchor.BN(0)));
     assert.ok(profile.authority.equals(provider.wallet.publicKey))
 
     _userProfile = userProfile;
@@ -64,8 +64,8 @@ describe('capture-actions', () => {
     assert.ok(postAccount.downloads.eq(new anchor.BN(0)));
     assert.ok(postAccount.creator.equals(userProfile.publicKey));
     assert.ok(postAccount.token.equals(token));
-    assert.ok(postAccount.score.eq(new anchor.BN(0)));
-    
+    assert.ok(postAccount.sac.eq(new anchor.BN(0)));
+
     assert.ok(tokenAccount.amount.eq(new anchor.BN(1)));
     assert.ok(tokenAccount.owner.equals(userProfile.publicKey));
     assert.ok(tokenAccount.mint.equals(mint));

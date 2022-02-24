@@ -29,7 +29,7 @@ pub mod capture_actions {
         let user_profile = &mut ctx.accounts.user_profile;
         // init profile
         user_profile.authority = *ctx.accounts.user.key;
-        user_profile.score = 0;
+        user_profile.sac = 0;
         Ok(())
     }
 
@@ -48,7 +48,7 @@ pub mod capture_actions {
         post.shares = 0;
         post.total_comments = 0;
         post.downloads = 0;
-        post.score = 0;
+        post.sac = 0;
         post.creator = *user_profile.to_account_info().key;
         let token = &mut ctx.accounts.token;
         post.token = *token.to_account_info().key;
@@ -78,7 +78,7 @@ pub mod capture_actions {
         if post_creator_key != post.creator {
             return Err(ProgramError::InvalidAccountData)
         }
-        post_creator.score += action as u64;
+        post_creator.sac += action as u64;
         Ok(())
     }
 }
