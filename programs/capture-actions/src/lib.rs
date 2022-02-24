@@ -1,4 +1,7 @@
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program::program_option::COption;
+use anchor_spl::token::{self, Mint, MintTo, SetAuthority, TokenAccount};
+use spl_token::instruction::AuthorityType;
 
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 
@@ -32,6 +35,11 @@ pub mod capture_actions {
 
     /// write a post
     pub fn write_post(ctx: Context<WritePost>) -> ProgramResult {
+        // First check that this token didn't mint anything yet
+        if ctx.accounts.mint.supply != 0 || ctx.accounts.mint.decimals != 0 {
+            return Err(ProgramError::InvalidArgument)
+        };
+
         let user_profile = &mut ctx.accounts.user_profile;
         let post = &mut ctx.accounts.post;
         // init state of post
@@ -40,8 +48,18 @@ pub mod capture_actions {
         post.shares = 0;
         post.total_comments = 0;
         post.downloads = 0;
+        post.score = 0;
         post.creator = *user_profile.to_account_info().key;
+        let token = &mut ctx.accounts.token;
+        post.token = *token.to_account_info().key;
 
+        // Mint NFT and delete mint authority
+        token::mint_to(ctx.accounts.mint_to(), 1)?;
+        token::set_authority(
+            ctx.accounts.null_authority(),
+            AuthorityType::MintTokens,
+            None,
+        )?;
         Ok(())
     }
 
@@ -60,7 +78,7 @@ pub mod capture_actions {
         if post_creator_key != post.creator {
             return Err(ProgramError::InvalidAccountData)
         }
-        post_creator.score += action as u128;
+        post_creator.score += action as u64;
         Ok(())
     }
 }
@@ -79,9 +97,37 @@ pub struct WritePost<'info> {
     #[account(mut, has_one = authority)]
     pub user_profile: Account<'info, UserProfile>,
     pub authority: Signer<'info>,
-    #[account(init, payer = authority, space = 8 + 5 + 32)]
+    #[account(init, payer = authority, space = 8 + 48 + 64)]
     pub post: Account<'info, Post>,
     pub system_program: Program<'info, System>,
+
+    #[account(mut, constraint = mint.mint_authority == COption::Some(*authority.key))]
+    pub mint: Account<'info, Mint>,
+    #[account(mut, has_one = mint)]
+    pub token: Account<'info, TokenAccount>,
+    #[account(address = token::ID)]
+    pub token_program: AccountInfo<'info>,
+}
+
+impl<'info> WritePost<'info> {
+    fn mint_to(&self) -> CpiContext<'_, '_, '_, 'info, MintTo<'info>> {
+        let account = MintTo {
+            mint: self.mint.to_account_info().clone(),
+            to: self.token.to_account_info().clone(),
+            authority: self.authority.to_account_info().clone(),
+        };
+        let program = self.token_program.to_account_info();
+        CpiContext::new(program, account)
+    }
+
+    fn null_authority(&self) -> CpiContext<'_, '_, '_, 'info, SetAuthority<'info>> {
+        let account = SetAuthority {
+            current_authority: self.authority.to_account_info().clone(),
+            account_or_mint: self.mint.to_account_info().clone(),
+        };
+        let program = self.token_program.clone();
+        CpiContext::new(program, account)
+    }
 }
 
 #[derive(Accounts)]

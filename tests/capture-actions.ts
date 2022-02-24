@@ -2,6 +2,7 @@ import assert from 'assert'
 import * as anchor from '@project-serum/anchor';
 import { Program } from '@project-serum/anchor';
 import { CaptureActions } from '../target/types/capture_actions';
+import { createMint, createTokenAccount, getTokenAccount, TOKEN_PROGRAM_ID } from '../lib/utils';
 
 describe('capture-actions', () => {
   const provider = anchor.Provider.env()
@@ -36,23 +37,39 @@ describe('capture-actions', () => {
   it("A post is written!", async () => {
     const userProfile = _userProfile;
     const post = anchor.web3.Keypair.generate()
+    let mint = await createMint(provider);
+    let token = await createTokenAccount(provider, mint, userProfile.publicKey)
+
     const tx = await program.rpc.writePost({
       accounts: {
         userProfile: userProfile.publicKey,
         authority: provider.wallet.publicKey,
         post: post.publicKey,
         systemProgram: anchor.web3.SystemProgram.programId,
+        mint,
+        token,
+        tokenProgram: TOKEN_PROGRAM_ID
       },
       signers: [post]
     })
     console.log("Your transaction signature", tx);
 
     const postAccount = await program.account.post.fetch(post.publicKey);
+    const tokenAccount = await getTokenAccount(provider, token);
 
+    assert.ok(postAccount.views.eq(new anchor.BN(0)));
+    assert.ok(postAccount.likes.eq(new anchor.BN(0)));
+    assert.ok(postAccount.shares.eq(new anchor.BN(0)));
+    assert.ok(postAccount.totalComments.eq(new anchor.BN(0)));
+    assert.ok(postAccount.downloads.eq(new anchor.BN(0)));
     assert.ok(postAccount.creator.equals(userProfile.publicKey));
-
+    assert.ok(postAccount.token.equals(token));
+    assert.ok(postAccount.score.eq(new anchor.BN(0)));
+    
+    assert.ok(tokenAccount.amount.eq(new anchor.BN(1)));
+    assert.ok(tokenAccount.owner.equals(userProfile.publicKey));
+    assert.ok(tokenAccount.mint.equals(mint));
     _post = post
-
   });
 
   // it("Score is updated!", async () => {
