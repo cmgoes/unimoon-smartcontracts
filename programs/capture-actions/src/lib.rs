@@ -13,11 +13,12 @@ use state::Post;
 #[derive(AnchorDeserialize)]
 #[derive(AnchorSerialize)]
 pub enum UserAction {
-    VIEW,
-    LIKE,
-    SHARE,
-    COMMENT,
-    DOWNLOAD,
+    // action = point
+    View = 1,
+    Like = 2,
+    Share = 3,
+    Comment = 5,
+    Download = 7,
 }
 
 #[program]
@@ -70,11 +71,11 @@ pub mod capture_actions {
     pub fn do_post(ctx: Context<DoPost>, action: UserAction) -> ProgramResult {
         let post = &mut ctx.accounts.post;
         match action {
-            UserAction::VIEW => post.views += 1,
-            UserAction::LIKE => post.likes += 1,
-            UserAction::SHARE => post.shares += 1,
-            UserAction::COMMENT => post.total_comments += 1,
-            UserAction::DOWNLOAD => post.downloads += 1,
+            UserAction::View => post.views += 1,
+            UserAction::Like => post.likes += 1,
+            UserAction::Share => post.shares += 1,
+            UserAction::Comment => post.total_comments += 1,
+            UserAction::Download => post.downloads += 1,
         };
         let post_creator = &mut ctx.accounts.post_creator;
         let post_creator_key = *post_creator.to_account_info().key;
@@ -156,9 +157,9 @@ impl<'info> WritePost<'info> {
 
 #[derive(Accounts)]
 pub struct DoPost<'info> {
-    #[account(mut, has_one = authority)]
-    pub user_profile: Account<'info, UserProfile>,
-    pub authority: Signer<'info>,
+    // #[account(mut, has_one = authority)]
+    // pub user_profile: Account<'info, UserProfile>,
+    // pub authority: Signer<'info>,
     #[account(mut)]
     pub post: Account<'info, Post>,
     #[account(mut)]

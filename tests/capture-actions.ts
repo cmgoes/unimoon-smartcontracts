@@ -75,6 +75,21 @@ describe('capture-actions', () => {
     _post = post
   });
 
+  it("Score is updated!", async () => {
+    const userProfile = _userProfile;
+    const post = _post;
+
+    const tx = await program.rpc.doPost({'view': {}}, {
+      accounts: {
+        // userProfile: userProfile.publicKey,
+        // authority: provider.wallet.publicKey,
+        post: post.publicKey,
+        postCreator: userProfile.publicKey
+      }
+    })
+    console.log("Your transaction signature", tx);
+  });
+
   it("Is transferred!", async () => {
     const userProfile = _userProfile;
 
@@ -87,19 +102,4 @@ describe('capture-actions', () => {
     })
     console.log("Your transaction signature", tx);
   });
-
-  // it("Score is updated!", async () => {
-  //   const userProfile = _userProfile;
-  //   const post = _post;
-
-  //   const tx = await program.rpc.doPost(new anchor.BN(0), {
-  //     accounts: {
-  //       userProfile: userProfile.publicKey,
-  //       authority: provider.wallet.publicKey,
-  //       post: post.publicKey,
-  //       postCreator: provider.wallet.publicKey
-  //     }
-  //   })
-  //   console.log("Your transaction signature", tx);
-  // });
 });
