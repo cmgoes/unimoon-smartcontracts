@@ -2,11 +2,6 @@ use anchor_lang::prelude::*;
 
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 
-pub mod state;
-
-use state::Unimoon;
-use state::UserSacPair;
-
 #[derive(AnchorDeserialize, AnchorSerialize)]
 pub enum UserAction {
     // action = point
@@ -22,16 +17,11 @@ pub mod unimoon_base {
     use super::*;
 
     /// initialize
-    pub fn initialize(ctx: Context<Initialize>, unimoon_account_bump: u8) -> Result<()> {
-        let unimoon = &mut ctx.accounts.unimoon;
-        unimoon.bump = unimoon_account_bump;
-        unimoon.pairs = Vec::new();
+    pub fn initialize(_ctx: Context<Initialize>) -> Result<()> {
         Ok(())
     }
 
     pub fn add_pair(ctx: Context<AddPair>, user: Pubkey, sac: u64) -> Result<()> {
-        let pair = UserSacPair { user, sac };
-        ctx.accounts.unimoon.pairs.push(pair);
         Ok(())
     }
 
@@ -56,14 +46,23 @@ pub mod unimoon_base {
 }
 
 #[derive(Accounts)]
-#[instruction()]
 pub struct Initialize<'info> {
-    #[account(init, seeds = [b"unimoon_v0".as_ref(), user.key().as_ref()], bump, payer = user)]
-    pub unimoon: Account<'info, Unimoon>,
-    #[account(mut)]
-    pub user: Signer<'info>,
-    pub system_program: Program<'info, System>,
+    #[account(zero)]
+    pub unimoon: AccountLoader<'info, Unimoon>,
+    pub rent: Sysvar<'info, Rent>,
 }
+
+#[zero_copy]
+pub struct UserSacPair {
+    pub user: Pubkey,
+    pub sac: u64,
+}
+
+#[account(zero_copy)]
+pub struct Unimoon {
+    pub pairs: [UserSacPair; 25000],
+}
+
 
 // #[derive(Accounts)]
 // pub struct DoPost<'info> {
@@ -79,5 +78,5 @@ pub struct Initialize<'info> {
 #[derive(Accounts)]
 pub struct AddPair<'info> {
     #[account(mut)]
-    pub unimoon: Account<'info, Unimoon>,
+    pub unimoon: AccountLoader<'info, Unimoon>,
 }
