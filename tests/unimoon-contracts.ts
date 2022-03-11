@@ -3,79 +3,50 @@ import * as anchor from '@project-serum/anchor';
 import { Program } from '@project-serum/anchor';
 import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { MetadataProgram, DataV2, Metadata, MasterEdition } from "@metaplex-foundation/mpl-token-metadata";
-import { CaptureActions } from '../target/types/capture_actions';
+import { UnimoonBase } from '../target/types/unimoon_base';
 import { MediaObjects } from '../target/types/media_objects';
 
 describe('unimoon-contracts', () => {
   const provider = anchor.Provider.env()
   anchor.setProvider(provider);
 
-  const program1 = anchor.workspace.CaptureActions as Program<CaptureActions>;
+  const program1 = anchor.workspace.UnimoonBase as Program<UnimoonBase>;
   const program2 = anchor.workspace.MediaObjects as Program<MediaObjects>;
 
-  let _userProfile: anchor.web3.Keypair;
   let _post: anchor.web3.Keypair;
+  let _unimoonAccount;
 
-  it("User's profile is created!", async () => {
-    const userProfile = anchor.web3.Keypair.generate()
-    const tx = await program1.rpc.createProfile({
+  it("Initialize", async () => {
+    const [unimoonAccount, unimoonAccountBump] = await anchor.web3.PublicKey.findProgramAddress(
+      [Buffer.from("unimoon_v0"), provider.wallet.publicKey.toBuffer()],
+      program1.programId
+    )
+
+    const tx = await program1.rpc.initialize(unimoonAccountBump, {
       accounts: {
-        userProfile: userProfile.publicKey,
+        unimoon: unimoonAccount,
         user: provider.wallet.publicKey,
         systemProgram: anchor.web3.SystemProgram.programId
       },
-      signers: [userProfile]
     });
     console.log("Your transaction signature", tx);
 
-    const profile = await program1.account.userProfile.fetch(userProfile.publicKey);
+    const unimoonState = await program1.account.unimoon.fetch(unimoonAccount);
 
-    assert.ok(profile.sac.eq(new anchor.BN(0)));
-    assert.ok(profile.authority.equals(provider.wallet.publicKey))
-
-    _userProfile = userProfile;
+    _unimoonAccount = unimoonAccount
   });
 
-  // it("A post is written!", async () => {
-  //   const userProfile = _userProfile;
-  //   const post = anchor.web3.Keypair.generate()
-  //   let mint = await createMint(provider);
-  //   let token = await createTokenAccount(provider, mint, userProfile.publicKey)
+  it("Add pair", async () => {
+    const unimoonAccount = _unimoonAccount;
 
-  //   const tx = await program.rpc.writePost({
-  //     accounts: {
-  //       userProfile: userProfile.publicKey,
-  //       authority: provider.wallet.publicKey,
-  //       post: post.publicKey,
-  //       systemProgram: anchor.web3.SystemProgram.programId,
-  //       mint,
-  //       token,
-  //       tokenProgram: TOKEN_PROGRAM_ID
-  //     },
-  //     signers: [post]
-  //   })
-  //   console.log("Your transaction signature", tx);
-
-  //   const profileAccount = await program.account.userProfile.fetch(userProfile.publicKey);
-  //   const postAccount = await program.account.post.fetch(post.publicKey);
-  //   const tokenAccount = await getTokenAccount(provider, token);
-
-  //   assert.ok(profileAccount.sac.eq(new anchor.BN(10)));
-
-  //   assert.ok(postAccount.views.eq(new anchor.BN(0)));
-  //   assert.ok(postAccount.likes.eq(new anchor.BN(0)));
-  //   assert.ok(postAccount.shares.eq(new anchor.BN(0)));
-  //   assert.ok(postAccount.totalComments.eq(new anchor.BN(0)));
-  //   assert.ok(postAccount.downloads.eq(new anchor.BN(0)));
-  //   assert.ok(postAccount.creator.equals(userProfile.publicKey));
-  //   assert.ok(postAccount.token.equals(token));
-  //   assert.ok(postAccount.sac.eq(new anchor.BN(0)));
-
-  //   assert.ok(tokenAccount.amount.eq(new anchor.BN(1)));
-  //   assert.ok(tokenAccount.owner.equals(userProfile.publicKey));
-  //   assert.ok(tokenAccount.mint.equals(mint));
-  //   _post = post
-  // });
+    const user = anchor.web3.Keypair.generate()
+    const tx = await program1.rpc.addPair(user.publicKey, new anchor.BN(0), {
+      accounts: {
+        unimoon: unimoonAccount,
+      },
+    });
+    console.log("Your transaction signature", tx);
+  });
 
   // it("Score is updated!", async () => {
   //   const userProfile = _userProfile;
@@ -105,9 +76,9 @@ describe('unimoon-contracts', () => {
   //   console.log("Your transaction signature", tx);
   // });
 
-  it('Create metadata', async () => {
+  it('Create a post', async () => {
     const mint = anchor.web3.Keypair.generate();
-    const payer = program2.provider.wallet.publicKey;
+    const post = anchor.web3.Keypair.generate();
 
     const [authority] = (await anchor.web3.PublicKey.findProgramAddress([
       Buffer.from("auth"),
@@ -133,14 +104,15 @@ describe('unimoon-contracts', () => {
     const editionAccount = await MasterEdition.getPDA(mint.publicKey);
 
     // @ts-ignore
-    const tx = await program2.methods.createMasterEdition(data, true, null).accounts({
+    const tx = await program2.methods.createPost(data, true, null).accounts({
+      post: post.publicKey,
       authority,
       mint: mint.publicKey,
       tokenAccount,
       metadataAccount,
       editionAccount,
       metadataProgram: MetadataProgram.PUBKEY,
-    }).signers([mint]).rpc();
+    }).signers([mint, post]).rpc();
     console.log("Your transaction signature", tx);
   })
 });

@@ -1,12 +1,12 @@
 [package]
-name = "capture-actions"
+name = "unimoon-base"
 version = "0.1.0"
 description = "Created with Anchor"
 edition = "2018"
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "capture_actions"
+name = "unimoon_base"
 
 [features]
 no-entrypoint = []

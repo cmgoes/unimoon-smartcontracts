@@ -19,3 +19,4 @@ default = []
 anchor-lang = "0.22.0"
 anchor-spl = "0.22.0"
 mpl-token-metadata = { version = "1.2.4", features = ["no-entrypoint"] }
+unimoon-base = { path = "../unimoon-base", features = ["cpi"] }

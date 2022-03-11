@@ -1,7 +1,7 @@
 [features]
 seeds = false
 [programs.localnet]
-capture_actions = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
+unimoon_base = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
 media_objects = "AtnsRniY7WdEban5BDenyDD8bD63JijL8EC1gn9SpZ3L"
 
 [registry]

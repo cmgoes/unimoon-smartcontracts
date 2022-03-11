@@ -396,13 +396,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "14c189c53d098945499cdfa7ecc63567cf3886b3332b312a5b4585d8d3a6a610"
 
 [[package]]
-name = "capture-actions"
-version = "0.1.0"
-dependencies = [
- "anchor-lang",
-]
-
-[[package]]
 name = "cc"
 version = "1.0.73"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -746,6 +739,7 @@ dependencies = [
  "anchor-lang",
  "anchor-spl",
  "mpl-token-metadata",
+ "unimoon-base",
 ]
 
 [[package]]
@@ -1294,6 +1288,13 @@ name = "unicode-xid"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8ccb82d61f80a663efe1f787a51b16b5a51e3314d6ac365b08639f52387b33f3"
+
+[[package]]
+name = "unimoon-base"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+]
 
 [[package]]
 name = "version_check"

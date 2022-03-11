@@ -4,20 +4,36 @@ use anchor_spl::{
     associated_token::AssociatedToken,
     token::{self, Mint, Token, TokenAccount},
 };
+// use capture_actions::state::UserProfile;
 use mpl_token_metadata::state::{Collection, Creator, DataV2, UseMethod, Uses};
 
 declare_id!("AtnsRniY7WdEban5BDenyDD8bD63JijL8EC1gn9SpZ3L");
+
+pub mod state;
+
+use state::Post;
 
 #[program]
 pub mod media_objects {
     use super::*;
 
-    pub fn create_master_edition(
-        ctx: Context<CreateMasterEdition>,
+    pub fn create_post(
+        ctx: Context<CreatePost>,
         data: AnchorDataV2,
         is_mutable: bool,
         max_supply: Option<u64>,
     ) -> Result<()> {
+        let post = &mut ctx.accounts.post;
+        // init state of post
+        post.views = 0;
+        post.likes = 0;
+        post.shares = 0;
+        post.total_comments = 0;
+        post.downloads = 0;
+        post.sac = 0;
+        // post.creator_profile = user_profile;
+        post.token_account = ctx.accounts.token_account.to_account_info().key();
+
         let mint_to_ctx = token::MintTo {
             mint: ctx.accounts.mint.to_account_info(),
             to: ctx.accounts.token_account.to_account_info(),
@@ -59,7 +75,7 @@ pub mod media_objects {
 }
 
 #[derive(Accounts, Clone)]
-pub struct CreateMasterEdition<'info> {
+pub struct CreatePost<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
     #[account(seeds = ["auth".as_bytes()], bump)]
@@ -77,6 +93,11 @@ pub struct CreateMasterEdition<'info> {
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub rent: Sysvar<'info, Rent>,
     pub system_program: Program<'info, System>,
+
+    #[account(init, payer = payer, space = 8 + 48 + 64)]
+    pub post: Account<'info, Post>,
+    // #[account(mut)]
+    // pub user_profile: Account<'info, UserProfile>,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, PartialEq, Debug, Clone)]
@@ -181,7 +202,7 @@ impl From<AnchorUseMethod> for UseMethod {
 }
 
 pub fn create_metadata_accounts_v2<'a, 'b, 'c, 'info>(
-    ctx: CpiContext<'a, 'b, 'c, 'info, CreateMasterEdition<'info>>,
+    ctx: CpiContext<'a, 'b, 'c, 'info, CreatePost<'info>>,
     update_authority_is_signer: bool,
     is_mutable: bool,
     data: DataV2,
@@ -219,7 +240,7 @@ pub fn create_metadata_accounts_v2<'a, 'b, 'c, 'info>(
 }
 
 pub fn create_master_edition_v3<'a, 'b, 'c, 'info>(
-    ctx: CpiContext<'a, 'b, 'c, 'info, CreateMasterEdition<'info>>,
+    ctx: CpiContext<'a, 'b, 'c, 'info, CreatePost<'info>>,
     max_supply: Option<u64>,
 ) -> ProgramResult {
     let ix = mpl_token_metadata::instruction::create_master_edition_v3(
