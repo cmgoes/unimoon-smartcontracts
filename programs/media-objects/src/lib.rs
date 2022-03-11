@@ -13,6 +13,16 @@ pub mod state;
 
 use state::Post;
 
+#[derive(AnchorDeserialize, AnchorSerialize)]
+pub enum UserAction {
+    // action = point
+    View = 1,
+    Like = 2,
+    Share = 3,
+    Comment = 5,
+    Download = 7,
+}
+
 #[program]
 pub mod media_objects {
     use super::*;
@@ -31,7 +41,7 @@ pub mod media_objects {
         post.total_comments = 0;
         post.downloads = 0;
         post.sac = 0;
-        // post.creator_profile = user_profile;
+        post.creator = ctx.accounts.payer.key();
         post.token_account = ctx.accounts.token_account.to_account_info().key();
 
         let mint_to_ctx = token::MintTo {
@@ -72,6 +82,24 @@ pub mod media_objects {
         )?;
         Ok(())
     }
+
+    /// update score of profile by user's action
+    pub fn act_post(ctx: Context<ActPost>, action: UserAction) -> Result<()> {
+        let post = &mut ctx.accounts.post;
+        match action {
+            UserAction::View => post.views += 1,
+            UserAction::Like => post.likes += 1,
+            UserAction::Share => post.shares += 1,
+            UserAction::Comment => post.total_comments += 1,
+            UserAction::Download => post.downloads += 1,
+        };
+
+        // TODO: Update SAC of post with correct value.
+        post.sac += action as u64;
+        // TODO: Update SAC of post creator using CPI
+        // TODO: Update SAC of from user using CPI
+        Ok(())
+    }
 }
 
 #[derive(Accounts, Clone)]
@@ -96,8 +124,6 @@ pub struct CreatePost<'info> {
 
     #[account(init, payer = payer, space = 8 + 48 + 64)]
     pub post: Account<'info, Post>,
-    // #[account(mut)]
-    // pub user_profile: Account<'info, UserProfile>,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, PartialEq, Debug, Clone)]
@@ -278,3 +304,9 @@ impl anchor_lang::Id for TokenMetadata {
     }
 }
 
+#[derive(Accounts)]
+pub struct ActPost<'info> {
+    #[account(mut)]
+    pub post: Account<'info, Post>,
+    pub from: Signer<'info>,
+}

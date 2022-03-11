@@ -3,6 +3,7 @@ seeds = false
 [programs.localnet]
 unimoon_base = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
 media_objects = "AtnsRniY7WdEban5BDenyDD8bD63JijL8EC1gn9SpZ3L"
+capture_actions = "ErjUjtqKE5AGWUsjseSJCVLtddM6rhaMbDqmhzraF9h6"
 
 [registry]
 url = "https://anchor.projectserum.com"

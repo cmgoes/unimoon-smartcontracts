@@ -10,68 +10,50 @@ describe('unimoon-contracts', () => {
   const provider = anchor.Provider.env()
   anchor.setProvider(provider);
 
-  const program1 = anchor.workspace.UnimoonBase as Program<UnimoonBase>;
+  const program0 = anchor.workspace.UnimoonBase as Program<UnimoonBase>;
   const program2 = anchor.workspace.MediaObjects as Program<MediaObjects>;
 
   let _post: anchor.web3.Keypair;
-  let _unimoonAccount;
+  let _unimoonUsers;
+  let _unimoonPosts;
 
-  it("Initialize", async () => {
-    const unimoon = anchor.web3.Keypair.generate()
+  it("Initialize Users", async () => {
+    const unimoonUsers = anchor.web3.Keypair.generate()
     const size = 1000000 + 8; // Account size in bytes.
 
-    const tx = await program1.rpc.initialize({
+    const tx = await program0.rpc.initializeUsers({
       accounts: {
-        unimoon: unimoon.publicKey,
+        unimoonUsers: unimoonUsers.publicKey,
         rent: anchor.web3.SYSVAR_RENT_PUBKEY
       },
       instructions: [
-        await program1.account.unimoon.createInstruction(unimoon, size)
+        await program0.account.unimoonUsers.createInstruction(unimoonUsers, size)
       ],
-      signers: [unimoon]
+      signers: [unimoonUsers]
     });
     console.log("Your transaction signature", tx);
+
+    _unimoonUsers = unimoonUsers;
   });
 
-  // it("Add pair", async () => {
-  //   const unimoonAccount = _unimoonAccount;
+  it("Initialize Posts", async () => {
+    const unimoonPosts = anchor.web3.Keypair.generate()
+    const size = 1000000 + 8; // Account size in bytes.
 
-  //   const user = anchor.web3.Keypair.generate()
-  //   const tx = await program1.rpc.addPair(user.publicKey, new anchor.BN(0), {
-  //     accounts: {
-  //       unimoon: unimoonAccount,
-  //     },
-  //   });
-  //   console.log("Your transaction signature", tx);
-  // });
+    const tx = await program0.rpc.initializePosts({
+      accounts: {
+        unimoonPosts: unimoonPosts.publicKey,
+        rent: anchor.web3.SYSVAR_RENT_PUBKEY
+      },
+      instructions: [
+        await program0.account.unimoonPosts.createInstruction(unimoonPosts, size)
+      ],
+      signers: [unimoonPosts]
+    });
+    console.log("Your transaction signature", tx);
 
-  // it("Score is updated!", async () => {
-  //   const userProfile = _userProfile;
-  //   const post = _post;
-
-  //   const tx = await program.rpc.doPost({'view': {}}, {
-  //     accounts: {
-  //       // userProfile: userProfile.publicKey,
-  //       // authority: provider.wallet.publicKey,
-  //       post: post.publicKey,
-  //       postCreator: userProfile.publicKey
-  //     }
-  //   })
-  //   console.log("Your transaction signature", tx);
-  // });
-
-  // it("Is transferred!", async () => {
-  //   const userProfile = _userProfile;
-
-  //   const tx = await program.rpc.transferSol({
-  //     accounts: {
-  //       userProfile: userProfile.publicKey,
-  //       authority: provider.wallet.publicKey,
-  //       systemProgram: anchor.web3.SystemProgram.programId,
-  //     }
-  //   })
-  //   console.log("Your transaction signature", tx);
-  // });
+    _unimoonPosts = unimoonPosts;
+  });
 
   it('Create a post', async () => {
     const mint = anchor.web3.Keypair.generate();
@@ -110,6 +92,22 @@ describe('unimoon-contracts', () => {
       editionAccount,
       metadataProgram: MetadataProgram.PUBKEY,
     }).signers([mint, post]).rpc();
+    console.log("Your transaction signature", tx);
+
+    _post = post
+  })
+
+  it('Act a post', async () => {
+    const post = _post
+    const user = anchor.web3.Keypair.generate()
+    const tx = await program2.rpc.actPost({ 'view': {} }, {
+      accounts: {
+        post: post.publicKey,
+        from: user.publicKey
+      },
+      signers: [user]
+    })
+
     console.log("Your transaction signature", tx);
   })
 });

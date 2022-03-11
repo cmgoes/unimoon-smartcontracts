@@ -2,53 +2,32 @@ use anchor_lang::prelude::*;
 
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 
-#[derive(AnchorDeserialize, AnchorSerialize)]
-pub enum UserAction {
-    // action = point
-    View = 1,
-    Like = 2,
-    Share = 3,
-    Comment = 5,
-    Download = 7,
-}
-
 #[program]
 pub mod unimoon_base {
     use super::*;
 
-    /// initialize
-    pub fn initialize(_ctx: Context<Initialize>) -> Result<()> {
+    /// initialize users SAC
+    pub fn initialize_users(_ctx: Context<InitializeUsers>) -> Result<()> {
         Ok(())
     }
 
-    pub fn add_pair(ctx: Context<AddPair>, user: Pubkey, sac: u64) -> Result<()> {
+    /// initialize SAC of media objects
+    pub fn initialize_posts(_ctx: Context<InitializePosts>) -> Result<()> {
         Ok(())
     }
-
-    // /// update score of profile by user's action
-    // pub fn do_post(ctx: Context<DoPost>, action: UserAction) -> ProgramResult {
-    //     let post = &mut ctx.accounts.post;
-    //     match action {
-    //         UserAction::View => post.views += 1,
-    //         UserAction::Like => post.likes += 1,
-    //         UserAction::Share => post.shares += 1,
-    //         UserAction::Comment => post.total_comments += 1,
-    //         UserAction::Download => post.downloads += 1,
-    //     };
-    //     let post_creator = &mut ctx.accounts.post_creator;
-    //     let post_creator_key = *post_creator.to_account_info().key;
-    //     if post_creator_key != post.creator {
-    //         return Err(ProgramError::InvalidAccountData)
-    //     }
-    //     post_creator.sac += action as u64;
-    //     Ok(())
-    // }
 }
 
 #[derive(Accounts)]
-pub struct Initialize<'info> {
+pub struct InitializeUsers<'info> {
     #[account(zero)]
-    pub unimoon: AccountLoader<'info, Unimoon>,
+    pub unimoon_users: AccountLoader<'info, UnimoonUsers>,
+    pub rent: Sysvar<'info, Rent>,
+}
+
+#[derive(Accounts)]
+pub struct InitializePosts<'info> {
+    #[account(zero)]
+    pub unimoon_posts: AccountLoader<'info, UnimoonPosts>,
     pub rent: Sysvar<'info, Rent>,
 }
 
@@ -59,24 +38,17 @@ pub struct UserSacPair {
 }
 
 #[account(zero_copy)]
-pub struct Unimoon {
+pub struct UnimoonUsers {
     pub pairs: [UserSacPair; 25000],
 }
 
+#[zero_copy]
+pub struct PostSacPair {
+    pub post: Pubkey,
+    pub sac: u64,
+}
 
-// #[derive(Accounts)]
-// pub struct DoPost<'info> {
-//     // #[account(mut, has_one = authority)]
-//     // pub user_profile: Account<'info, UserProfile>,
-//     // pub authority: Signer<'info>,
-//     #[account(mut)]
-//     pub post: Account<'info, Post>,
-//     #[account(mut)]
-//     pub post_creator: Account<'info, UserProfile>,
-// }
-
-#[derive(Accounts)]
-pub struct AddPair<'info> {
-    #[account(mut)]
-    pub unimoon: AccountLoader<'info, Unimoon>,
+#[account(zero_copy)]
+pub struct UnimoonPosts {
+    pub pairs: [PostSacPair; 25000],
 }

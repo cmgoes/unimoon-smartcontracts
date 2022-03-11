@@ -8,6 +8,6 @@ pub struct Post {
     pub total_comments: u64,
     pub downloads: u64,
     pub sac: u64,
-    pub creator_profile: Pubkey,
+    pub creator: Pubkey,
     pub token_account: Pubkey,
 }
