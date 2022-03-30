@@ -1,3 +1,0 @@
-[submodule "deps/metaplex"]
-	path = deps/metaplex
-	url = https://github.com/metaplex-foundation/metaplex-program-library.git
