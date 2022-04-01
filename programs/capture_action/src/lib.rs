@@ -19,13 +19,17 @@ pub mod capture_action {
 
     pub fn media_post(
         ctx: Context<MediaPost>,
-        mediaobjectid: [u8;20],
+        mediaobjectid: String,
         user_public_key: Pubkey
     ) -> ProgramResult {
         let post = &mut ctx.accounts.post; 
 
+        if mediaobjectid.chars().count() != 20 {
+            return Err(Errors::MediaObjectInvalid.into())
+        }
+
         let mut iter = post.mediaobject_ids.iter();
-        if iter.any(|&v| v == mediaobjectid) {
+        if iter.any(|v| v == &mediaobjectid) {
             return Err(Errors::UserPostedMedia.into());
         }
 
@@ -37,11 +41,15 @@ pub mod capture_action {
         Ok(())
     }
 
-    pub fn media_complete_view(ctx: Context<MediaCompleteView>, mediaobjectid: [u8;20]) -> ProgramResult {
+    pub fn media_complete_view(ctx: Context<MediaCompleteView>, mediaobjectid: String) -> ProgramResult {
         let post = &mut ctx.accounts.post;               
 
+        if mediaobjectid.chars().count() != 20 {
+            return Err(Errors::MediaObjectInvalid.into())
+        }
+
         let mut iter = post.mediaobject_complete_viewed.iter();
-        if iter.any(|&v| v == mediaobjectid) {
+        if iter.any(|v| v == &mediaobjectid) {
             return Err(Errors::UserCompleteViewedMedia.into());
         }
 
@@ -51,11 +59,15 @@ pub mod capture_action {
         Ok(())
     }
 
-    pub fn media_like(ctx: Context<MediaLike>, mediaobjectid: [u8;20]) -> ProgramResult {
-        let post = &mut ctx.accounts.post;                
+    pub fn media_like(ctx: Context<MediaLike>, mediaobjectid: String) -> ProgramResult {
+        let post = &mut ctx.accounts.post;       
+        
+        if mediaobjectid.chars().count() != 20 {
+            return Err(Errors::MediaObjectInvalid.into())
+        }
 
         let mut iter = post.mediaobject_liked.iter();
-        if iter.any(|&v| v == mediaobjectid) {
+        if iter.any(|v| v == &mediaobjectid) {
             return Err(Errors::UserLikedMedia.into());
         }
 
@@ -65,11 +77,15 @@ pub mod capture_action {
         Ok(())
     }
 
-    pub fn media_share(ctx: Context<MediaShare>, mediaobjectid: [u8;20]) -> ProgramResult {
-        let post = &mut ctx.accounts.post;            
+    pub fn media_share(ctx: Context<MediaShare>, mediaobjectid: String) -> ProgramResult {
+        let post = &mut ctx.accounts.post;  
+        
+        if mediaobjectid.chars().count() != 20 {
+            return Err(Errors::MediaObjectInvalid.into())
+        }
 
         let mut iter = post.mediaobject_shared.iter();
-        if iter.any(|&v| v == mediaobjectid) {
+        if iter.any(|v| v == &mediaobjectid) {
             return Err(Errors::UserSharedMedia.into());
         }
 
@@ -79,11 +95,15 @@ pub mod capture_action {
         Ok(())
     }
 
-    pub fn media_multiple_view(ctx: Context<MediaMultipleView>, mediaobjectid: [u8;20]) -> ProgramResult {
-        let post = &mut ctx.accounts.post;           
+    pub fn media_multiple_view(ctx: Context<MediaMultipleView>, mediaobjectid: String) -> ProgramResult {
+        let post = &mut ctx.accounts.post;  
+        
+        if mediaobjectid.chars().count() != 20 {
+            return Err(Errors::MediaObjectInvalid.into())
+        }
 
         let mut iter = post.mediaobject_multiple_viewed.iter();
-        if iter.any(|&v| v == mediaobjectid) {
+        if iter.any(|v| v == &mediaobjectid) {
             return Err(Errors::UserMultipleViewedMedia.into());
         }
 
@@ -93,11 +113,15 @@ pub mod capture_action {
         Ok(())
     }
 
-    pub fn media_download(ctx: Context<MediaDownload>, mediaobjectid: [u8;20]) -> ProgramResult {
-        let post = &mut ctx.accounts.post;          
+    pub fn media_download(ctx: Context<MediaDownload>, mediaobjectid: String) -> ProgramResult {
+        let post = &mut ctx.accounts.post;   
+        
+        if mediaobjectid.chars().count() != 20 {
+            return Err(Errors::MediaObjectInvalid.into())
+        }
 
         let mut iter = post.mediaobject_downloaded.iter();
-        if iter.any(|&v| v == mediaobjectid) {
+        if iter.any(|v| v == &mediaobjectid) {
             return Err(Errors::UserDownloadedMedia.into());
         }
 
@@ -107,11 +131,15 @@ pub mod capture_action {
         Ok(())
     }
 
-    pub fn media_comment(ctx: Context<MediaComment>, mediaobjectid: [u8;20]) -> ProgramResult {
-        let post = &mut ctx.accounts.post;             
+    pub fn media_comment(ctx: Context<MediaComment>, mediaobjectid: String) -> ProgramResult {
+        let post = &mut ctx.accounts.post;      
+        
+        if mediaobjectid.chars().count() != 20 {
+            return Err(Errors::MediaObjectInvalid.into())
+        }
 
         let mut iter = post.mediaobject_commented.iter();
-        if iter.any(|&v| v == mediaobjectid) {
+        if iter.any(|v| v == &mediaobjectid) {
             return Err(Errors::UserCommentedMedia.into());
         }
 
@@ -184,18 +212,21 @@ pub struct Post {
     downloads: u8,
     comments: u8,
     posts: u8,
-    mediaobject_ids: Vec<[u8;20]>,       
-    mediaobject_liked: Vec<[u8;20]>,
-    mediaobject_downloaded: Vec<[u8;20]>,
-    mediaobject_complete_viewed: Vec<[u8;20]>,
-    mediaobject_shared: Vec<[u8;20]>,
-    mediaobject_multiple_viewed: Vec<[u8;20]>,
-    mediaobject_commented: Vec<[u8;20]>,
+    mediaobject_ids: Vec<String>,       
+    mediaobject_liked: Vec<String>,
+    mediaobject_downloaded: Vec<String>,
+    mediaobject_complete_viewed: Vec<String>,
+    mediaobject_shared: Vec<String>,
+    mediaobject_multiple_viewed: Vec<String>,
+    mediaobject_commented: Vec<String>,
     creator: Pubkey,
 }
 
 #[error]
 pub enum Errors {   
+    #[msg("Media object is invalid")]
+    MediaObjectInvalid,
+
     #[msg("User has already posted that media object id")]
     UserPostedMedia,
 
